@@ -1,10 +1,11 @@
-from instructions import mem_instructions, non_mem_instructions, pseudo_instructions
+from instructions import MEM_INSTRUCTIONS, NON_MEM_INSTRUCTIONS, PSEUDO_INSTRUCTIONS
 
 file_object = open("output", "w")
 
 
 def convert_hexa_to_dec(hexa_num: str):
     return int(hexa_num, 16)
+
 
 def first_pass(cleaned_source_code: list[str]):
     symbol_table = {}
@@ -31,21 +32,25 @@ def second_pass(cleaned_source_code, symbol_table):
 
         if column_count == 1:
             instruction = line
-            if instruction not in non_mem_instructions:
+            if instruction == "END":
+                return
+
+            elif instruction not in NON_MEM_INSTRUCTIONS:
                 print(f"Instruction not found on line: {idx + 1}")
                 return
 
-            file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(non_mem_instructions[instruction])[2:].zfill(16)}\n")
+            file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(NON_MEM_INSTRUCTIONS[instruction])[2:].zfill(16)}\n")
 
         if column_count == 2 or column_count == 3:
             indirect_addressing_mode = None
 
             if column_count == 2:
                 instruction, address = line.split()
-                if instruction in pseudo_instructions:
-                    if instruction == "END":
+                if instruction in PSEUDO_INSTRUCTIONS:
+                    if abs(int(address)) > (2 ** 11 - 1):
+                        print(f"Address exceeds word size on line: {idx + 1}")
                         return
-                    elif instruction == "DEC":
+                    if instruction == "DEC":
                         file_object.write(f"{bin(idx)[2:].zfill(16)}  {int(address) & 0xFFFF:016b}\n")
 
                     elif instruction == "HEX":
@@ -58,7 +63,7 @@ def second_pass(cleaned_source_code, symbol_table):
                 if indirect_addressing_mode != "I":
                     print(f"Invalid indirect addressing instruction: {indirect_addressing_mode}")
 
-            if instruction not in mem_instructions:
+            if instruction not in MEM_INSTRUCTIONS:
                 print(f"Instruction not found on line: {idx + 1}")
                 return
 
@@ -77,11 +82,13 @@ def second_pass(cleaned_source_code, symbol_table):
                 return
 
             if indirect_addressing_mode is not None:
-                instruction = mem_instructions[instruction] + 0x8000
+                instruction = MEM_INSTRUCTIONS[instruction] + 0x8000
             else:
-                instruction = mem_instructions[instruction]
+                instruction = MEM_INSTRUCTIONS[instruction]
 
             file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(instruction | int(address))[2:].zfill(16)}\n")
+
+    file_object.close()
 
 
 if __name__ == "__main__":
