@@ -13,7 +13,8 @@ def first_pass(cleaned_source_code: list[str]):
     location_counter = 0
 
     if cleaned_source_code[0].startswith("ORG"):
-        location_counter = int(cleaned_source_code[0].strip()[3:])
+        program_origin = int(cleaned_source_code[0].strip()[3:])
+        location_counter = program_origin
 
     for idx, line in enumerate(cleaned_source_code):
         line = line.split(",")
@@ -23,10 +24,10 @@ def first_pass(cleaned_source_code: list[str]):
 
         cleaned_source_code[idx] = line[-1].strip()
 
-    return symbol_table
+    return symbol_table, program_origin
 
 
-def second_pass(cleaned_source_code, symbol_table):
+def second_pass(cleaned_source_code, symbol_table, program_origin):
     for idx, line in enumerate(cleaned_source_code):
         column_count = len(line.split())
 
@@ -39,7 +40,7 @@ def second_pass(cleaned_source_code, symbol_table):
                 print(f"Instruction not found on line: {idx + 1}")
                 return
 
-            file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(NON_MEM_INSTRUCTIONS[instruction])[2:].zfill(16)}\n")
+            file_object.write(f"{bin(idx + program_origin)[2:].zfill(16)}  {bin(NON_MEM_INSTRUCTIONS[instruction])[2:].zfill(16)}\n")
 
         if column_count == 2 or column_count == 3:
             indirect_addressing_mode = None
@@ -51,10 +52,10 @@ def second_pass(cleaned_source_code, symbol_table):
                         print(f"Address exceeds word size on line: {idx + 1}")
                         return
                     if instruction == "DEC":
-                        file_object.write(f"{bin(idx)[2:].zfill(16)}  {int(address) & 0xFFFF:016b}\n")
+                        file_object.write(f"{bin(idx + program_origin)[2:].zfill(16)}  {int(address) & 0xFFFF:016b}\n")
 
                     elif instruction == "HEX":
-                        file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(int(address, 16))[2:].zfill(16)}\n")
+                        file_object.write(f"{bin(idx + program_origin)[2:].zfill(16)}  {bin(int(address, 16))[2:].zfill(16)}\n")
 
                     continue
 
@@ -86,7 +87,7 @@ def second_pass(cleaned_source_code, symbol_table):
             else:
                 instruction = MEM_INSTRUCTIONS[instruction]
 
-            file_object.write(f"{bin(idx)[2:].zfill(16)}  {bin(instruction | int(address))[2:].zfill(16)}\n")
+            file_object.write(f"{bin(idx + program_origin)[2:].zfill(16)}  {bin(instruction | int(address))[2:].zfill(16)}\n")
 
     file_object.close()
 
@@ -96,5 +97,6 @@ if __name__ == "__main__":
         lines = f.readlines()
 
         source_code = [line.rstrip().split("/")[0] for line in lines]
-        generated_symbol_table = first_pass(source_code)
-        second_pass(source_code, generated_symbol_table)
+        generated_symbol_table, program_origin = first_pass(source_code)
+        print(source_code)
+        second_pass(source_code, generated_symbol_table, program_origin)
