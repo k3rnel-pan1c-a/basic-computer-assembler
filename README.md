@@ -7,7 +7,7 @@ This program implements a basic assembler that takes an assembly source file (`s
 
 - **`MEM_INSTRUCTIONS`**: A dictionary containing memory-reference instructions and their corresponding opcode values.
 - **`NON_MEM_INSTRUCTIONS`**: A dictionary containing non-memory-reference instructions and their corresponding opcode values.
-- **`PSEUDO_INSTRUCTIONS`**: A dictionary of pseudo-instructions like `ORG`, `DEC`, and `HEX` that allow memory initialization and organization.
+- **`PSEUDO_INSTRUCTIONS`**: A set of pseudo-instructions like `ORG`, `DEC`, and `HEX` that allow memory initialization and organization.
 
 ---
 
